@@ -1,12 +1,8 @@
 #!/usr/bin/env node
 
-import path from 'path';
-import { fileURLToPath, pathToFileURL } from 'url';
+import { URL } from 'url';
 
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
+// import.meta.url is the entry point, e.g., file:///.../bin/cli.js
+const serverUrl = new URL('../src/server.js', import.meta.url);
 
-const serverPath = path.resolve(__dirname, '../src/server.js');
-
-// Use pathToFileURL to ensure compatibility on Windows when using import()
-import(pathToFileURL(serverPath).href);
+import(serverUrl.href);
