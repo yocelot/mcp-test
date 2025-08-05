@@ -1,1 +1,62 @@
-import * as readline from 'readline';import * as os from 'os';import * as fs from 'fs';import { fileURLToPath } from 'url';import path from 'path';const __filename = fileURLToPath(import.meta.url);const __dirname = path.dirname(__filename);// --- Debug Logging ---const logStream = fs.createWriteStream(path.resolve(__dirname, '../debug.log'), { flags: 'a' });function log(message) {  logStream.write(`[${new Date().toISOString()}] ${message}\n`);}log('Server process started.');// --- Manifest Loading ---let manifest;try {  const manifestPath = path.resolve(__dirname, '../manifest.json');  manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf-8'));  log('Manifest loaded successfully.');} catch (error) {  log(`Error loading manifest: ${error.message}`);  process.exit(1);}const rl = readline.createInterface({  input: process.stdin,  output: process.stdout,  terminal: false});log('Readline interface created.');// MCP Handshakeconst handshake = {  mcp_version: '0.1',  pid: process.pid,  manifest: manifest};try {  const handshakeJson = JSON.stringify(handshake);  process.stdout.write(handshakeJson + '\n');  log(`Handshake sent: ${handshakeJson}`);} catch (error) {  log(`Error sending handshake: ${error.message}`);}rl.on('line', (line) => {  log(`Received line: ${line}`);  try {    const request = JSON.parse(line);    handleRequest(request);  } catch (e) {    log(`Error parsing JSON: ${e.message}`);    sendError('Invalid JSON');  }});rl.on('close', () => {  log('Readline stream closed.');});process.stdin.on('end', () => {  log('Stdin stream ended.');});function handleRequest(request) {  log(`Handling request: ${JSON.stringify(request)}`);  const { tool_name, parameters } = request;  if (tool_name === 'example_tool') {    const result = parameters.query.toUpperCase();    sendResponse(request.request_id, result);  } else if (tool_name === 'system_info') {    const result = {      os: os.platform(),      arch: os.arch(),      cpus: os.cpus().length    };    sendResponse(request.request_id, result);  } else {    sendError(`Tool not found: ${tool_name}`, request.request_id);  }}function sendResponse(requestId, payload) {  const response = {    request_id: requestId,    payload: payload  };  process.stdout.write(JSON.stringify(response) + '\n');}function sendError(message, requestId) {  const errorResponse = {    request_id: requestId,    error: message  };  process.stdout.write(JSON.stringify(errorResponse) + '\n');}
+const readline = require('readline');
+const os = require('os');
+const manifest = require('../manifest.json');
+
+const rl = readline.createInterface({
+  input: process.stdin,
+  output: process.stdout,
+  terminal: false
+});
+
+// MCP Handshake
+const handshake = {
+  mcp_version: '0.1',
+  pid: process.pid,
+  manifest: manifest
+};
+
+process.stdout.write(JSON.stringify(handshake) + '\n');
+
+rl.on('line', (line) => {
+  try {
+    const request = JSON.parse(line);
+    handleRequest(request);
+  } catch (e) {
+    sendError('Invalid JSON');
+  }
+});
+
+function handleRequest(request) {
+  const { tool_name, parameters } = request;
+
+  if (tool_name === 'example_tool') {
+    const result = parameters.query.toUpperCase();
+    sendResponse(request.request_id, result);
+  } else if (tool_name === 'system_info') {
+    const result = {
+      os: os.platform(),
+      arch: os.arch(),
+      cpus: os.cpus().length
+    };
+    sendResponse(request.request_id, result);
+  } else {
+    sendError(`Tool not found: ${tool_name}`, request.request_id);
+  }
+}
+
+function sendResponse(requestId, payload) {
+  const response = {
+    request_id: requestId,
+    payload: payload
+  };
+  process.stdout.write(JSON.stringify(response) + '\n');
+}
+
+function sendError(message, requestId) {
+  const errorResponse = {
+    request_id: requestId,
+    error: message
+  };
+  process.stdout.write(JSON.stringify(errorResponse) + '\n');
+}
+
