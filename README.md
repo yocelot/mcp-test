@@ -1,41 +1,90 @@
-あなたはMCP（Model Context Protocol）対応のサーバを作成するエキスパートエンジニアです。
-次の要件を満たすMCPサーバを作成してください。
+# MCP Server Example
 
-# サーバ仕様
-- 言語: Node.js（TypeScriptまたはJavaScript、ESM対応）
-- プロトコル: Model Context Protocol v0.1 準拠
-- MCPクライアント（例: Gemini-CLI, ClaudeCode）から利用可能
-- 標準入力/出力（stdio）を使った通信に対応
-- サーバ起動時にMCP handshake処理を行い、機能一覧を返す
-- 以下のツール（tools）を提供する:
-  1. `example_tool`  
-     - 入力: `query`（文字列）
-     - 処理: 入力テキストを大文字に変換して返す
-  2. `system_info`  
-     - 入力なし
-     - 処理: 実行環境のOS・CPU情報を返す
+This is an example MCP (Model Context Protocol) server implemented in Node.js.
 
-# GitHubから直接 `npx` 実行できる仕様
-- `package.json` に `"bin"` フィールドを設定して、`npx github:<ユーザー>/<リポジトリ>` で起動可能にする
-- 実行エントリーポイントは `bin/cli.js` に配置し、`#!/usr/bin/env node` を付与
-- `bin/cli.js` から `src/server.js` を呼び出す構成
-- `chmod +x bin/cli.js` が必要な旨をREADMEに記載
-- `npx github:<ユーザー>/<リポジトリ>` 実行例をREADMEに含める
-- npm公開は不要（GitHubから直接npx実行）
+## Directory Structure
 
-# 実装要件
-- MCPサーバ起動コマンドの例を含める
-- `manifest.json` の例も作成
-- コードは1つのファイルに完結させる場合と、`bin/` + `src/` に分ける場合の両方の例を提示
-- README.mdに、セットアップ方法とテスト方法、npx実行方法を記載
+```
+.
+├── bin
+│   └── cli.js
+├── src
+│   └── server.js
+├── manifest.json
+├── package.json
+└── README.md
+```
 
-# 出力形式
-1. ディレクトリ構成例
-2. manifest.json
-3. package.json
-4. bin/cli.js
-5. src/server.js（MCPサーバ本体）
-6. README.md
+## Setup
 
-可能であれば、クライアントからのサンプル呼び出し例も記載してください。
+1.  **Install dependencies:**
 
+    ```bash
+    npm install
+    ```
+
+2.  **Make the CLI executable:**
+
+    On Unix-based systems (Linux, macOS), you need to give the script execution permissions.
+
+    ```bash
+    chmod +x bin/cli.js
+    ```
+
+## Running the Server
+
+You can run the server directly using Node.js:
+
+```bash
+node src/server.js
+```
+
+Or, you can run it through the CLI entry point:
+
+```bash
+./bin/cli.js
+```
+
+## Running with npx
+
+Once you have published this repository to GitHub, you can run it directly using `npx`.
+
+Replace `<user>` and `<repo>` with your GitHub username and repository name.
+
+```bash
+npx github:<user>/<repo>
+```
+
+## Testing
+
+Here is an example of how a client might interact with the server.
+
+**Server starts and sends handshake:**
+
+```json
+{"mcp_version":"0.1","pid":12345,"manifest":{"name":"mcp-server-example","version":"0.1.0","description":"An example MCP server.","tools":[{"name":"example_tool","description":"Converts input text to uppercase.","parameters":{"type":"object","properties":{"query":{"type":"string","description":"The text to convert to uppercase."}},"required":["query"]}},{"name":"system_info","description":"Returns OS and CPU information.","parameters":{"type":"object","properties":{}}}]}}
+```
+
+**Client sends a request to `example_tool`:**
+
+```json
+{"request_id":"req-1","tool_name":"example_tool","parameters":{"query":"hello world"}}
+```
+
+**Server sends a response:**
+
+```json
+{"request_id":"req-1","payload":"HELLO WORLD"}
+```
+
+**Client sends a request to `system_info`:**
+
+```json
+{"request_id":"req-2","tool_name":"system_info","parameters":{}}
+```
+
+**Server sends a response:**
+
+```json
+{"request_id":"req-2","payload":{"os":"win32","arch":"x64","cpus":8}}
+```

@@ -1,0 +1,29 @@
+{
+  "name": "mcp-server-example",
+  "version": "0.1.0",
+  "description": "An example MCP server.",
+  "tools": [
+    {
+      "name": "example_tool",
+      "description": "Converts input text to uppercase.",
+      "parameters": {
+        "type": "object",
+        "properties": {
+          "query": {
+            "type": "string",
+            "description": "The text to convert to uppercase."
+          }
+        },
+        "required": ["query"]
+      }
+    },
+    {
+      "name": "system_info",
+      "description": "Returns OS and CPU information.",
+      "parameters": {
+        "type": "object",
+        "properties": {}
+      }
+    }
+  ]
+}
